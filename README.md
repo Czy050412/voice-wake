@@ -162,6 +162,20 @@ MIT — 随便用，随便改，随便分发。
 
 ---
 
+## ☕ 打赏支持
+
+如果这个项目对你有帮助，欢迎请我喝杯咖啡 ☕
+
+<div align="center">
+  <img src="assets/wechat-pay.png" alt="微信打赏" width="200">
+  <br>
+  <sub>微信扫一扫，支持开发者继续维护 ❤️</sub>
+</div>
+
+> 开源不易，你的每一份支持都是我继续迭代的动力！
+
+---
+
 ## 🙏 致谢
 
 - [OpenAI Whisper](https://github.com/openai/whisper) — 语音识别模型
