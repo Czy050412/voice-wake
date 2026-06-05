@@ -1,0 +1,40 @@
+# Python virtual environment
+.venv/
+
+# Model cache
+.whisper_cache/
+models/
+model/
+
+# Runtime files
+voice_wake.log
+voice_cmd.txt
+tts.txt
+input_pos.cfg
+
+# Calibration cache
+.ms_cache/
+.modelscope_cache/
+model_funasr/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backups
+backups/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

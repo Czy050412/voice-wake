@@ -1,0 +1,32 @@
+# Voice Wake Configuration
+# Edit this file to customize your voice assistant
+
+# --- Core Settings ---
+wake_word: "狗蛋"
+language: "zh"
+model: "small"  # tiny/small/medium/large - bigger = better accuracy but slower
+
+# --- WorkBuddy Integration ---
+workbuddy:
+  enabled: true  # Set false to disable auto-send to WorkBuddy
+  input_offset_y: -180  # Pixel offset from window bottom to input box
+
+# --- System Commands (voice_commands.py) ---
+commands:
+  enabled: true  # Enable voice-controlled system commands
+  confirm_actions: false  # Ask for confirmation before destructive actions
+
+# --- Text-to-Speech ---
+tts:
+  enabled: true
+  voice: "default"  # Windows SAPI voice name
+  rate: 0  # Speech rate (-10 to 10)
+
+# --- Advanced ---
+advanced:
+  mic_index: null  # null = auto-detect, or specify microphone index
+  energy_threshold: 300  # Lower = more sensitive (picks up quieter speech)
+  pause_threshold: 1.5  # Seconds of silence before ending phrase
+  phrase_limit: 15  # Max phrase length in seconds
+  send_cooldown: 5.0  # Minimum seconds between sends
+  log_level: "info"  # debug/info/warn/error
