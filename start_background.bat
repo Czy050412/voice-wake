@@ -17,20 +17,21 @@ if errorlevel 1 (
     "%PYTHON%" -m pip install SpeechRecognition pyaudio -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -q
 )
 
+echo [INFO] Voice Overlay starting...
+start "" /min "%PYTHONW%" "%DIR%voice_overlay.py"
+
+echo [INFO] Voice Wake Service starting (background)...
 start "" /min "%PYTHONW%" "%DIR%voice_wake.py"
 
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
-tasklist /fi "imagename eq pythonw.exe" 2>nul | find "pythonw.exe" >nul
-if errorlevel 1 (
-    echo [ERROR] Start failed. Use start.bat to check details.
-    pause
-    exit /b 1
-)
-
-echo ErDan is running in background. You can close this window safely.
-echo To stop: end pythonw.exe in Task Manager
 echo.
-echo TTS feedback file: %DIR%tts.txt
+echo ============================================
+echo   ErDan is running!
+echo   - Overlay: screen top-right
+echo   - Service: background
+echo.
+echo   To stop: Task Manager - end pythonw.exe
+echo ============================================
 echo.
 pause

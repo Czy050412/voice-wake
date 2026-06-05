@@ -11,11 +11,22 @@ voice_wake.log
 voice_cmd.txt
 tts.txt
 input_pos.cfg
+overlay.lock
+overlay.log
+overlay_text.txt
+overlay_debug.png
+voice_wake.out.log
 
 # Calibration cache
 .ms_cache/
 .modelscope_cache/
 model_funasr/
+.funasr_cache/
+.funasr_git/
+
+# Temp files
+tmp*.wav
+nul
 
 # Python
 __pycache__/

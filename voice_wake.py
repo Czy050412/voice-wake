@@ -29,14 +29,16 @@ sys.path.insert(0, CMD_DIR)
 WAKE_WORD = "狗蛋"
 LANGUAGE = "zh"
 MODEL_SIZE = "small"
-ENERGY_THRESHOLD = 300
-PAUSE_THRESHOLD = 1.5
-PHRASE_LIMIT = 15
-SEND_COOLDOWN = 5.0
+ENERGY_THRESHOLD = 550
+PAUSE_THRESHOLD = 0.6
+PHRASE_LIMIT = 10
+SEND_COOLDOWN = 3.0
 INPUT_OFFSET_Y = -180
 TTS_ENABLED = True
 CMDS_ENABLED = True
 BUDDY_ENABLED = True
+DYNAMIC_ENERGY = False
+SILENCE_THRESHOLD = 300
 
 try:
     import yaml
@@ -57,6 +59,8 @@ try:
             PAUSE_THRESHOLD = adv.get("pause_threshold", PAUSE_THRESHOLD)
             PHRASE_LIMIT = adv.get("phrase_limit", PHRASE_LIMIT)
             SEND_COOLDOWN = adv.get("send_cooldown", SEND_COOLDOWN)
+            DYNAMIC_ENERGY = adv.get("dynamic_energy", DYNAMIC_ENERGY)
+            SILENCE_THRESHOLD = adv.get("silence_threshold", SILENCE_THRESHOLD)
 except Exception:
     pass
 
@@ -65,6 +69,7 @@ CMD_FILE = os.path.join(APP_DIR, "voice_cmd.txt")
 LOG_FILE = os.path.join(APP_DIR, "voice_wake.log")
 POS_CFG = os.path.join(APP_DIR, "input_pos.cfg")
 WHISPER_CACHE = os.path.join(APP_DIR, ".whisper_cache")
+OVERLAY_FILE = os.path.join(APP_DIR, "overlay_text.txt")
 
 # Disable pyautogui fail-safe
 pyautogui.FAILSAFE = False
@@ -77,6 +82,15 @@ def log(msg):
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(line + "\n")
+    except Exception:
+        pass
+
+
+def overlay(tag, text):
+    """Write to overlay display file for the HUD"""
+    try:
+        with open(OVERLAY_FILE, "w", encoding="utf-8") as f:
+            f.write("[{}] {}".format(tag, text))
     except Exception:
         pass
 
@@ -148,7 +162,7 @@ def init_commands():
 def try_system_command(text):
     """Route text to system commands if it doesn't look like a WorkBuddy query"""
     if _cmd_executor is None:
-        return False
+        return False, ""
     # Heuristic: if text contains system action keywords, try commands first
     sys_keywords = ["打开", "启动", "音量", "锁屏", "截图", "关机", "重启", "时间", "几点", "电量"]
     if any(kw in text for kw in sys_keywords):
@@ -156,8 +170,8 @@ def try_system_command(text):
         if result:
             name, ok, desc = result
             log("[CMD] {} executed: {}".format(name, ok))
-            return True
-    return False
+            return True, desc if desc else name
+    return False, ""
 
 
 # ======================== Win32 Window Management ========================
@@ -369,7 +383,10 @@ def main():
     log("  Press Ctrl+C to exit")
     log("=" * 50)
 
+    overlay("Listening", "Voice Wake v2.0 已就绪 — 说\"狗蛋\"唤醒我")
+
     waiting_cmd = False
+    overlay("Heard", "")  # Clear overlay on start
 
     while True:
         try:
@@ -378,36 +395,45 @@ def main():
 
             text = recognize(audio).strip()
             if not text:
+                overlay("Listening", "正在收听中...") if not waiting_cmd else None
                 continue
 
             log("[Heard] {}".format(text))
+            overlay("Heard", text)
 
             # Route to system command OR WorkBuddy based on content
-            if CMDS_ENABLED and try_system_command(text):
-                continue
+            if CMDS_ENABLED:
+                is_cmd, cmd_desc = try_system_command(text)
+                if is_cmd:
+                    overlay("CMD", cmd_desc)
+                    continue
 
             # WorkBuddy routing
             if not waiting_cmd:
                 if WAKE_WORD in text:
                     cmd = text.split(WAKE_WORD, 1)[1].strip()
                     if cmd:
+                        overlay("Sending", cmd)
                         send_to_buddy(cmd)
                     else:
                         log("[Wake] Say your command...")
-                        speaking = True if TTS_ENABLED else False
+                        overlay("Wake", "请说话...")
                         if TTS_ENABLED:
                             speak("我在听")
                         waiting_cmd = True
             else:
+                overlay("Sending", text)
                 send_to_buddy(text)
                 waiting_cmd = False
 
         except sr.WaitTimeoutError:
             if waiting_cmd:
                 log("[Timeout] Back to listening")
+                overlay("Listening", "超时，回到收听状态")
                 waiting_cmd = False
         except KeyboardInterrupt:
             log("Service stopped")
+            overlay("Listening", "服务已停止")
             break
         except Exception as e:
             log("[Error] {}".format(e))
@@ -422,14 +448,18 @@ if __name__ == "__main__":
     # Audio capture
     r = sr.Recognizer()
     r.energy_threshold = ENERGY_THRESHOLD
-    r.dynamic_energy_threshold = True
+    r.dynamic_energy_threshold = DYNAMIC_ENERGY
     r.pause_threshold = PAUSE_THRESHOLD
     r.operation_timeout = None
     try:
         m = sr.Microphone()
         with m as s:
             r.adjust_for_ambient_noise(s, duration=0.5)
-        log("Microphone OK")
+        # 如果禁用了动态阈值，确保阈值不低于配置文件的值
+        if not DYNAMIC_ENERGY:
+            r.energy_threshold = max(r.energy_threshold, ENERGY_THRESHOLD)
+        log("Mic OK | energy_threshold={} | pause_threshold={}".format(
+            r.energy_threshold, r.pause_threshold))
     except Exception as e:
         log("Mic ERROR: {}".format(e))
         sys.exit(1)

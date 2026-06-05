@@ -1,34 +1,27 @@
 @echo off
-title ErDan Voice Wake Service
+chcp 65001 >nul 2>&1
+title Voice Wake
+cd /d "%~dp0"
 
-set "PYTHON=F:\Agent\Claw\voice_wake\.venv\Scripts\python.exe"
-set "DIR=%~dp0"
-
-if not exist "%PYTHON%" (
-    echo [ERROR] Python venv not found
-    echo [FIX] Check path: %PYTHON%
-    pause
-    exit /b 1
+:: Kill old instances
+for /f "tokens=2" %%p in ('tasklist /fi "imagename eq python.exe" /fo list ^| findstr /i "PID"') do (
+    >nul 2>&1 wmic process where "ProcessId=%%p and CommandLine like '%%voice_overlay%%'" call terminate
+    >nul 2>&1 wmic process where "ProcessId=%%p and CommandLine like '%%voice_wake%%'" call terminate
 )
+timeout /t 1 >nul
 
-"%PYTHON%" -c "import speech_recognition" >nul 2>nul
-if errorlevel 1 (
-    echo [INFO] Installing dependencies...
-    "%PYTHON%" -m pip install SpeechRecognition pyaudio -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -q
-    if errorlevel 1 (
-        echo [ERROR] Install failed
-        pause
-        exit /b 1
-    )
-)
+:: Delete stale lock files
+del /f overlay.lock 2>nul
 
-echo [INFO] ErDan Voice Wake Service starting...
-echo [INFO] Make sure mic is ready and WorkBuddy is open
-echo.
-"%PYTHON%" "%DIR%voice_wake.py"
+:: Start overlay (hidden window)
+start "" /min "%~dp0.venv\Scripts\pythonw.exe" "%~dp0voice_overlay.py"
 
-if errorlevel 1 (
-    echo.
-    echo [ERROR] Process exited abnormally
-    pause
-)
+:: Wait for overlay to settle
+timeout /t 2 >nul
+
+:: Start voice_wake (hidden window)
+start "" /min "%~dp0.venv\Scripts\pythonw.exe" "%~dp0voice_wake.py"
+
+echo Voice Wake 已启动！
+echo 语音浮窗在第二个显示器上，说"狗蛋"唤醒。
+timeout /t 3 >nul

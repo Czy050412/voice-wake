@@ -25,8 +25,10 @@ tts:
 # --- Advanced ---
 advanced:
   mic_index: null  # null = auto-detect, or specify microphone index
-  energy_threshold: 300  # Lower = more sensitive (picks up quieter speech)
-  pause_threshold: 1.5  # Seconds of silence before ending phrase
-  phrase_limit: 15  # Max phrase length in seconds
-  send_cooldown: 5.0  # Minimum seconds between sends
+  energy_threshold: 550  # Higher = less sensitive to background speech (was 300)
+  pause_threshold: 0.6  # Faster response: seconds of silence before ending phrase (was 1.5)
+  phrase_limit: 10  # Max phrase length in seconds (was 15)
+  send_cooldown: 3.0  # Minimum seconds between sends (was 5.0)
   log_level: "info"  # debug/info/warn/error
+  dynamic_energy: false  # false = use fixed energy_threshold (was true, caused gradual sensitivity increase)
+  silence_threshold: 300  # Lower = more aggressive silence detection
