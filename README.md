@@ -39,7 +39,7 @@ Voice Wake: [识别] 打开QQ音乐 → 启动QQ音乐
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/yourname/voice-wake.git
+git clone https://github.com/Czy050412/voice-wake.git
 cd voice-wake
 
 # 2. 一键安装（创建虚拟环境、安装依赖、下载模型）
