@@ -20,7 +20,7 @@ audio:
 performance:
   prewarm: true          # Pre-load both models at startup (~8s)
   dual_model: true       # tiny for wake, small for commands
-  streaming: false       # Enable streaming partial results (experimental)
+  streaming: true        # 🆕 Real-time sliding-window transcription
   cpu_threads: 4
   num_workers: 2
 
