@@ -1,7 +1,8 @@
-# Voice Wake v2.0 - Dependencies
-# Core ASR
+# Voice Wake v3 "Jarvis" - Dependencies
+# Core ASR (dual-model: tiny + small)
 faster-whisper>=1.0.0
 SpeechRecognition>=3.10.0
+numpy>=1.24.0
 
 # Audio
 PyAudio>=0.2.11

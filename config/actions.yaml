@@ -1,0 +1,39 @@
+# Voice Wake v3 — Custom Actions
+# =================================
+# Define your own actions. Each action has:
+#   name:     Unique identifier
+#   type:     "http" | "python" | "shell" | "keyboard"
+#   priority: Lower = higher priority (1-99, 1=first to try)
+#   trigger_keywords: Text must contain at least one keyword to trigger
+
+actions:
+  custom:
+    # ─── Example: HTTP webhook ───
+    # - name: "home_assistant"
+    #   type: "http"
+    #   priority: 15
+    #   url: "http://your-server:8123/api/services/light/turn_on"
+    #   method: "POST"
+    #   body_template: '{"entity_id": "light.living_room"}'
+    #   trigger_keywords: ["开灯", "灯光"]
+
+    # ─── Example: Run a Python script ───
+    # - name: "my_automation"
+    #   type: "python"
+    #   priority: 16
+    #   script: "scripts/my_task.py"  # Relative to voice_wake/ folder
+    #   trigger_keywords: ["自动化", "执行任务"]
+
+    # ─── Example: Shell command ───
+    # - name: "open_project"
+    #   type: "shell"
+    #   priority: 17
+    #   command: "start F:\\MyProject\\project.uproject"
+    #   trigger_keywords: ["打开项目", "启动项目"]
+
+    # ─── Example: Keyboard macro ───
+    # - name: "save_all"
+    #   type: "keyboard"
+    #   priority: 18
+    #   macro: "ctrl+s"
+    #   trigger_keywords: ["保存", "ctrl s"]

@@ -1,34 +1,71 @@
-# Voice Wake Configuration
-# Edit this file to customize your voice assistant
+# Voice Wake v3 "Jarvis" Configuration
+# ===========================================
+# Unlimited possibilities — plug in any action.
 
 # --- Core Settings ---
 wake_word: "狗蛋"
 language: "zh"
-model: "small"  # tiny/small/medium/large - bigger = better accuracy but slower
+model: "small"        # tiny/small/medium/large
+wake_model: "tiny"    # Lightweight model for wake-word pre-filter (always tiny)
 
-# --- WorkBuddy Integration ---
-workbuddy:
-  enabled: true  # Set false to disable auto-send to WorkBuddy
-  input_offset_y: -180  # Pixel offset from window bottom to input box
+# --- Audio Pipeline ---
+audio:
+  energy_threshold: 550
+  pause_threshold: 0.6   # Faster response
+  phrase_limit: 10
+  dynamic_energy: false
+  silence_threshold: 300
 
-# --- System Commands (voice_commands.py) ---
-commands:
-  enabled: true  # Enable voice-controlled system commands
-  confirm_actions: false  # Ask for confirmation before destructive actions
+# --- Performance ---
+performance:
+  prewarm: true          # Pre-load both models at startup (~8s)
+  dual_model: true       # tiny for wake, small for commands
+  streaming: false       # Enable streaming partial results (experimental)
+  cpu_threads: 4
+  num_workers: 2
+
+# --- Action Pipeline ---
+actions:
+  enabled: true
+  send_cooldown: 3.0
+
+  # AI Assistant auto-detection
+  ai_assistant:
+    enabled: true
+    auto_detect: true         # Auto-find WorkBuddy/CodeBuddy/Cursor/Windsurf
+    input_offset_y: -180
+    cooldown: 3.0
+    targets:                  # Manual override — order matters
+      - process: "WorkBuddy.exe"
+      - process: "CodeBuddy.exe"
+      - title: "deepseek"
+      - title: "Kimi"
+
+  # Custom actions — define below
+  custom: []
+  # Example:
+  # custom:
+  #   - name: "home_lights_on"
+  #     type: "http"
+  #     priority: 15
+  #     url: "http://192.168.1.100:8123/api/light/on"
+  #     method: "POST"
+  #     body_template: '{"entity_id": "light.living_room"}'
+  #     trigger_keywords: ["开灯", "打开灯", "灯光"]
+  #
+  #   - name: "my_script"
+  #     type: "python"
+  #     priority: 16
+  #     script: "scripts/my_automation.py"
+  #     trigger_keywords: ["自动化", "自动执行"]
 
 # --- Text-to-Speech ---
 tts:
   enabled: true
-  voice: "default"  # Windows SAPI voice name
-  rate: 0  # Speech rate (-10 to 10)
+  voice: "default"
+  rate: 0
 
-# --- Advanced ---
-advanced:
-  mic_index: null  # null = auto-detect, or specify microphone index
-  energy_threshold: 550  # Higher = less sensitive to background speech (was 300)
-  pause_threshold: 0.6  # Faster response: seconds of silence before ending phrase (was 1.5)
-  phrase_limit: 10  # Max phrase length in seconds (was 15)
-  send_cooldown: 3.0  # Minimum seconds between sends (was 5.0)
-  log_level: "info"  # debug/info/warn/error
-  dynamic_energy: false  # false = use fixed energy_threshold (was true, caused gradual sensitivity increase)
-  silence_threshold: 300  # Lower = more aggressive silence detection
+# --- System Commands ---
+commands:
+  enabled: true
+  confirm_power: false  # Confirm before shutdown/restart
