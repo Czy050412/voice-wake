@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-lightgrey.svg)]()
+[![Stars](https://img.shields.io/github/stars/Czy050412/voice-wake?style=social)](https://github.com/Czy050412/voice-wake)
 
 **Voice Wake** 是一个运行在本地的 Windows 语音助手。基于 OpenAI Whisper 离线语音识别，可以：
 - 🎯 **喊唤醒词唤醒**（默认"狗蛋"），说完自动把指令发到 AI 对话框
@@ -400,6 +401,14 @@ voice_server_start.bat    # 启动 HTTP 服务 (port 9876)
 ## 📝 License
 
 MIT — 随便用，随便改，随便分发。
+
+---
+
+## 🎁 赞助支持
+
+如果这个项目帮到了你，欢迎请我喝杯咖啡 ☕
+
+> 💡 也欢迎 [点个 Star ⭐](https://github.com/Czy050412/voice-wake) — 这是最好的支持！
 
 ---
 
