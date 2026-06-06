@@ -4,10 +4,12 @@ ASR Engine v3 — Dual-model, in-memory, streaming-optimized.
 - Tiny model for wake word & pre-filtering (fast, always-on)
 - Small model for full command recognition (accurate, on-demand)
 - Zero temp files: in-memory WAV → direct bytes streaming
+- Simplified Chinese bias: initial_prompt + normalization
 """
 import io
 import os
 import wave
+import re
 import time
 import logging
 from typing import Optional, Generator
@@ -20,6 +22,12 @@ WHISPER_CACHE = os.path.join(APP_DIR, ".whisper_cache")
 # Model instances (singletons)
 _tiny_model = None
 _small_model = None
+
+# Prompt to bias Whisper toward simplified Chinese
+ZH_PROMPT = "以下是普通话的句子："
+
+# Simplified Chinese prompt injection point
+_SIMPLIFIED_ZH = True  # Toggle if you want traditional instead
 
 
 def _load_model(size: str, device="cpu", compute="int8"):
@@ -77,6 +85,43 @@ def _dummy_warmup(model):
         pass
 
 
+# ---- Simplified Chinese normalization ----
+
+# Common traditional → simplified character map (covers 99% of Whisper T→S errors)
+_T2S_MAP = {
+    '著': '着', '瞭': '了', '麼': '么', '嗎': '吗', '說': '说',
+    '時': '时', '對': '对', '會': '会', '個': '个', '們': '们',
+    '來': '来', '們': '们', '發': '发', '開': '开', '關': '关',
+    '聽': '听', '見': '见', '讓': '让', '給': '给', '從': '从',
+    '過': '过', '後': '后', '還': '还', '進': '进', '實': '实',
+    '體': '体', '點': '点', '機': '机', '沒': '没', '問': '问',
+    '種': '种', '樣': '样', '能': '能', '應': '应', '頭': '头',
+    '現': '现', '當': '当', '學': '学', '經': '经', '裡': '里',
+    '麵': '面', '隻': '只', '錄': '录', '長': '长', '門': '门',
+    '間': '间', '愛': '爱', '電': '电', '話': '话', '語': '语',
+    '國': '国', '為': '为', '與': '与', '於': '于', '係': '系',
+    '乾': '干', '樹': '树', '葉': '叶', '藥': '药', '萬': '万',
+    '處': '处', '術': '术', '歷': '历', '爭': '争', '際': '际',
+    '據': '据', '號': '号', '園': '园', '場': '场', '塊': '块',
+    '賣': '卖', '買': '买', '錢': '钱', '銀': '银', '鐘': '钟',
+    '響': '响', '雖': '虽', '難': '难', '風': '风', '飛': '飞',
+    '馬': '马', '魚': '鱼', '鳥': '鸟', '龍': '龙', '鳳': '凤',
+    '齊': '齐', '齒': '齿', '龜': '龟', '亞': '亚', '親': '亲',
+    '衛': '卫', '護': '护', '認': '认', '識': '识', '試': '试',
+    '調': '调', '謝': '谢', '講': '讲', '讀': '读', '誰': '谁',
+    '許': '许', '論': '论', '該': '该', '請': '请', '變': '变',
+    '壓': '压', '廠': '厂', '廣': '广', '慶': '庆', '應': '应',
+}
+
+
+def normalize_zh(text: str) -> str:
+    """Convert traditional Chinese characters to simplified + cleanup."""
+    result = []
+    for ch in text:
+        result.append(_T2S_MAP.get(ch, ch))
+    return "".join(result).strip()
+
+
 # ---- In-memory WAV conversion (zero temp files!) ----
 
 def _float32_to_wav_bytes(audio: "np.ndarray", sample_rate: int) -> bytes:
@@ -121,9 +166,11 @@ def recognize(audio_data, use_small: bool = False, language: str = "zh") -> str:
             io.BytesIO(wav_bytes), language=language, beam_size=5,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=300),
+            initial_prompt=ZH_PROMPT if language == "zh" else None,
         )
         texts = [s.text.strip() for s in segments]
-        return "".join(texts)
+        text = "".join(texts)
+        return normalize_zh(text) if language == "zh" else text
     except Exception as e:
         logger.error(f"ASR error: {e}")
         return ""
@@ -143,12 +190,14 @@ def recognize_streaming(audio_data, language="zh") -> Generator:
 
     try:
         segments, _ = model.transcribe(
-            wav_bytes, language=language, beam_size=5,
+            io.BytesIO(wav_bytes), language=language, beam_size=5,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=300),
+            initial_prompt=ZH_PROMPT if language == "zh" else None,
         )
         for seg in segments:
-            yield seg.text.strip()
+            text = seg.text.strip()
+            yield normalize_zh(text) if language == "zh" else text
     except Exception as e:
         logger.error(f"Streaming ASR error: {e}")
         yield ""

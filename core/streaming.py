@@ -27,7 +27,7 @@ logger = logging.getLogger("voice_wake.streaming")
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Import from local asr module
-from .asr import init_tiny, init_small, _float32_to_wav_bytes
+from .asr import init_tiny, init_small, _float32_to_wav_bytes, normalize_zh, ZH_PROMPT
 
 CHUNK_SECONDS = 2.0       # Transcribe window size
 OVERLAP_SECONDS = 0.5     # Overlap between windows (for dedup seam)
@@ -165,8 +165,10 @@ class StreamingRecognizer:
                     speech_pad_ms=100,
                 ),
                 condition_on_previous_text=False,
+                initial_prompt=ZH_PROMPT if self.language == "zh" else None,
             )
-            return "".join(s.text.strip() for s in segments)
+            text = "".join(s.text.strip() for s in segments)
+            return normalize_zh(text) if self.language == "zh" else text
         except Exception as e:
             logger.warning("Transcribe error: %s", e)
             return ""
