@@ -27,7 +27,7 @@ logger = logging.getLogger("voice_wake.streaming")
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Import from local asr module
-from .asr import init_tiny, _float32_to_wav_bytes
+from .asr import init_tiny, init_small, _float32_to_wav_bytes
 
 CHUNK_SECONDS = 2.0       # Transcribe window size
 OVERLAP_SECONDS = 0.5     # Overlap between windows (for dedup seam)
@@ -59,7 +59,15 @@ class StreamingRecognizer:
     def __init__(self, language: str = "zh", model_size: str = "tiny",
                  on_result: Callable = None):
         self.language = language
-        self.model = init_tiny()  # tiny = fast enough for streaming
+        try:
+            self.model = init_tiny()  # tiny = fast enough for streaming
+        except Exception:
+            logger.warning("Tiny model unavailable, falling back to small")
+            try:
+                self.model = init_small()
+            except Exception:
+                logger.warning("Small also fails, trying tiny with no cache check")
+                self.model = init_tiny()
         self.on_result = on_result
         self._buffer = np.array([], dtype=np.float32)
         self._prev_text = ""

@@ -92,16 +92,25 @@ from core.streaming import StreamingRecognizer, SAMPLE_RATE as STREAM_RATE
 
 def init_models():
     """Load ASR models. Dual-model: tiny always-on + small on-demand."""
+    global DUAL_MODEL
     log.info("Initializing ASR engines...")
     t0 = time.time()
 
-    init_tiny()  # Always load tiny for wake-word detection
+    # Try tiny first (needed for streaming), fallback to small
+    try:
+        init_tiny()
+    except Exception as e:
+        log.warning(f"Tiny model not available ({e}), using small only")
+        DUAL_MODEL = False  # Can't do dual without tiny
+
     if DUAL_MODEL:
         init_small()
+    elif core.asr._small_model is None:
+        init_small()
 
-    if PREWARM:
+    if PREWARM and core.asr._tiny_model and core.asr._small_model:
         prewarm()
-        log.info(f"Models pre-warmed in {time.time()-t0:.1f}s")
+    log.info(f"Models ready in {time.time()-t0:.1f}s")
 
 
 # ---- Action Pipeline ----
@@ -240,7 +249,7 @@ def run_streaming():
         chunk_samples = STREAM_RATE // 10  # 100ms frames
         while True:
             try:
-                frame = source.stream.read(chunk_samples, exception_on_overflow=False)
+                frame = source.read(chunk_samples, exception_on_overflow=False)
             except IOError:
                 continue
 

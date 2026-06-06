@@ -13,7 +13,6 @@ from .keyboard_action import KeyboardAction
 
 def load_builtins(registry, config: dict = None):
     """Register all built-in actions. User YAML actions inserted between system and AI."""
-    from .registry import ActionRegistry
 
     # Priority 1-9: System commands (always first)
     registry.register(SystemCommandsAction())
