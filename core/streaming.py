@@ -150,28 +150,15 @@ class StreamingRecognizer:
         if len(audio) < SAMPLE_RATE * 0.2:  # Skip <200ms
             return ""
 
-        # Convert float32 [-1,1] to int16
-        audio_int16 = (audio * 32767).astype(np.int16)
+        # faster-whisper 1.2.1: audio must be str, BinaryIO, or np.ndarray
+        # Wrap WAV bytes in BytesIO (BinaryIO) to avoid "File object has no read()"
+        import io as _io
+        wav_bytes = _float32_to_wav_bytes(audio, SAMPLE_RATE)
+        audio_io = _io.BytesIO(wav_bytes)
 
         try:
             segments, _ = self.model.transcribe(
-                audio_int16, language=self.language, beam_size=5,
-                vad_filter=True,
-                vad_parameters=dict(
-                    min_silence_duration_ms=200,
-                    speech_pad_ms=100,
-                ),
-                condition_on_previous_text=False,
-            )
-            return "".join(s.text.strip() for s in segments)
-        except Exception:
-            pass
-
-        # Fallback: via WAV bytes
-        try:
-            wav_bytes = _float32_to_wav_bytes(audio, SAMPLE_RATE)
-            segments, _ = self.model.transcribe(
-                wav_bytes, language=self.language, beam_size=5,
+                audio_io, language=self.language, beam_size=5,
                 vad_filter=True,
                 vad_parameters=dict(
                     min_silence_duration_ms=200,

@@ -118,7 +118,7 @@ def recognize(audio_data, use_small: bool = False, language: str = "zh") -> str:
 
     try:
         segments, _ = model.transcribe(
-            wav_bytes, language=language, beam_size=5,
+            io.BytesIO(wav_bytes), language=language, beam_size=5,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=300),
         )
