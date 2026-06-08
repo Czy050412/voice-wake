@@ -2,7 +2,7 @@
 # Edit this file to customize your voice assistant
 
 # --- Core Settings ---
-wake_word: "狗蛋"
+wake_word: "鐙楄泲"
 language: "zh"
 model: "small"  # tiny/small/medium/large - bigger = better accuracy but slower
 
@@ -25,7 +25,7 @@ tts:
 # --- Advanced ---
 advanced:
   mic_index: null  # null = auto-detect, or specify microphone index
-  energy_threshold: 550  # Higher = less sensitive to background speech (was 300)
+  energy_threshold: 600  # Higher = less sensitive. 600 blocks video/bg noise
   pause_threshold: 0.6  # Faster response: seconds of silence before ending phrase (was 1.5)
   phrase_limit: 10  # Max phrase length in seconds (was 15)
   send_cooldown: 3.0  # Minimum seconds between sends (was 5.0)
